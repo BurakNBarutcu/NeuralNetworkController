@@ -129,3 +129,16 @@ def load_model_parameters(
     print(f"Model on device:\n{next(model.parameters()).device}")
 
     return model
+
+def plot_twodata(x,y1,y2,labels,titles,ylabels,xlabel):
+    plt.figure() #figsize=(15,15)
+    plt.subplot(2,1,1)
+    plt.plot(x,y1,label=labels[0])
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabels[0])
+    plt.title(titles[0])
+    plt.subplot(2,1,2)
+    plt.plot(x,y2,label=labels[1])
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabels[1])
+    plt.title(titles[1])
