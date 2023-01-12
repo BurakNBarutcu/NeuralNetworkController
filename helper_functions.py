@@ -7,8 +7,6 @@ import torch
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-
-
 def print_train_time(start, end, device=None):
     """Prints difference between start and end time.
     Args:
@@ -21,7 +19,6 @@ def print_train_time(start, end, device=None):
     total_time = end - start
     print(f"\nTrain time on {device}: {total_time:.3f} seconds")
     return total_time
-
 
 # Plot loss curves of a model
 def plot_loss_curves(results,fig_iden: int=1):
@@ -60,9 +57,7 @@ def plot_loss_curves(results,fig_iden: int=1):
         plt.plot(epochs, test_accuracy, 'bo-', label="test_accuracy")
         plt.title("Accuracy")
         plt.xlabel("Epochs")
-        # plt.legend()
-
-
+        plt.legend()
 
 def set_seeds(seed: int=42):
     """Sets random sets for torch operations.
@@ -75,9 +70,10 @@ def set_seeds(seed: int=42):
     torch.cuda.manual_seed(seed)
     print(f"Manual seed is set as {seed}.")
 
-def save_model(model: torch.nn.Module,
+def save_model_parameters(
+    model: torch.nn.Module,
     model_path: str = "Saved_Models",
-    model_name: str = "Saved_Model"
+    model_name: str = "Saved_Model",
 ):
     """Save the trained model for future use.
     Args:
@@ -130,15 +126,96 @@ def load_model_parameters(
 
     return model
 
-def plot_twodata(x,y1,y2,labels,titles,ylabels,xlabel):
-    plt.figure() #figsize=(15,15)
+def save_trainmodel(model: torch.nn.Module,
+    epoch,
+    optimizer,
+    loss_fn,
+    loss_value,
+    model_path: str = "Saved_Models",
+    model_name: str = "Saved_Best_Model",):
+    """Save the best model during training for eval or continue training.
+    Args:
+        model (torch.nn.Module): Trained model to be saved.
+        epoch
+        optimizer
+        loss_fn
+        loss_value
+        model_path (str, optinal): Path that model is saved. Defaults is "Saved_Models".
+        model_name (str, optinal): Model name which is used while saving. Default is "Saved_Model".
+        """
+    
+    model_path = Path(model_path)
+    model_path.mkdir(parents=True, exist_ok=True)
+
+    # 2. Create model save path 
+    model_save_path = model_path / model_name
+
+    # 3. Save the model state dict 
+    print(f"Saving model to: {model_save_path}")
+    torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss_fn': loss_fn,
+            'current_loss':loss_value
+            },
+            f=model_save_path)
+
+def load_trainmodel(model: torch.nn.Module,
+    optimizer,
+    model_path: str = "Saved_Models",
+    model_name: str = "Saved_Model",
+    device: torch.device = "cuda" if torch.cuda.is_available() else "cpu"):
+    """Loads the parameters of a saved model during training.
+    Args:
+        model (torch.nn.Module): Model to load the parameters.
+        model_path (str, optinal): Path that model is saved. Defaults is "Saved_Models".
+        model_name (str, optinal): Model name which is used while saving. Default is "Saved_Model".
+        device (torch.device, optional): target device to compute on. Defaults to "cuda" if torch.cuda.is_available() else "cpu".
+    
+    Returns:
+        Loaded model for future use.
+    """
+    model_path = Path(model_path)
+    model_path.mkdir(parents=True, exist_ok=True)
+
+    # 2. Create model save path 
+    model_save_path = model_path / model_name
+
+    checkpoint = torch.load(model_save_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    epoch = checkpoint['epoch']
+    loss_fn = checkpoint['loss_fn']
+    current_loss = checkpoint['current_loss']
+
+    return model, optimizer, epoch, loss_fn, current_loss
+
+def plot_twodata(x,y1,y2,labels,titles,ylabels,xlabel,predictions=None):
+    plt.figure(figsize=(15,10)) #figsize=(15,15)
     plt.subplot(2,1,1)
-    plt.plot(x,y1,label=labels[0])
+    plt.plot(x,y1,label=labels[0],c='b')
     plt.xlabel(xlabel)
     plt.ylabel(ylabels[0])
     plt.title(titles[0])
+    plt.grid()
+
     plt.subplot(2,1,2)
-    plt.plot(x,y2,label=labels[1])
+    plt.plot(x,y2,label=labels[1],c='r')
+    if predictions is not None:
+        plt.plot(x,predictions,label=labels[2],c='g')
     plt.xlabel(xlabel)
     plt.ylabel(ylabels[1])
     plt.title(titles[1])
+    plt.grid()
+    plt.legend()
+
+def apply_window(seq,ws):
+    out = []
+    L = len(seq)
+    
+    for i in range(L-ws):
+        window = seq[i:i+ws]
+        # label = seq[i+ws:i+ws+1]
+        out.append((window))
+    return out
