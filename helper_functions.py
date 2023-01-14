@@ -191,7 +191,7 @@ def load_trainmodel(model: torch.nn.Module,
 
     return model, optimizer, epoch, loss_fn, current_loss
 
-def plot_twodata(x,y1,y2,labels,titles,ylabels,xlabel,predictions=None):
+def plot_twodata(x,y1,y2,labels,titles,ylabels,xlabel,target=None):
     plt.figure(figsize=(15,10)) #figsize=(15,15)
     plt.subplot(2,1,1)
     plt.plot(x,y1,label=labels[0],c='b')
@@ -202,20 +202,23 @@ def plot_twodata(x,y1,y2,labels,titles,ylabels,xlabel,predictions=None):
 
     plt.subplot(2,1,2)
     plt.plot(x,y2,label=labels[1],c='r')
-    if predictions is not None:
-        plt.plot(x,predictions,label=labels[2],c='g')
+    if target is not None:
+        plt.plot(x,target,label=labels[2],c='g')
     plt.xlabel(xlabel)
     plt.ylabel(ylabels[1])
     plt.title(titles[1])
     plt.grid()
     plt.legend()
 
-def apply_window(seq,ws):
-    out = []
+def apply_window(seq,ws,device):
+   # out = []
     L = len(seq)
-    
-    for i in range(L-ws):
-        window = seq[i:i+ws]
+    out = torch.zeros(size=[L-1,ws],device=device)
+    seq = torch.cat((torch.zeros(size=[ws-1],device=device),seq),dim=0)
+
+    for i in range(L-1):
+        # window = seq[i:i+ws]
         # label = seq[i+ws:i+ws+1]
-        out.append((window))
+        # out.append((window))
+        out[i,:] = seq[i:i+ws]
     return out
